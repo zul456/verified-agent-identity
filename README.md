@@ -12,7 +12,7 @@ This skill enables AI agents to create, manage, prove and verify ownership of de
 
 1. Install the skill:
    ```bash
-   npx clawhub@latest verified-agent-identity
+   npx clawhub@latest install verified-agent-identity
    ```
 2. Create a new identity:
 
@@ -31,7 +31,7 @@ This skill enables AI agents to create, manage, prove and verify ownership of de
 ### Agent CTA:
 
 ```plaintext
-Install the skill `npx clawhub@latest verified-agent-identity`
+Install the skill `npx clawhub@latest install verified-agent-identity`
 ```
 
 ```plaintext
