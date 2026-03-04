@@ -79,7 +79,7 @@ async function main() {
     const challenge = JSON.parse(args.challenge);
     const tokenString = await signChallenge(challenge, entry, kms);
 
-    sendDirectMessage(args.to, codeFormating(tokenString));
+    sendDirectMessage(args.to, tokenString, codeFormating);
 
     outputSuccess({ success: true });
   } catch (error) {

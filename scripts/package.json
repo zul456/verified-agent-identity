@@ -17,6 +17,7 @@
     "@iden3/js-iden3-auth": "^1.14.0",
     "@iden3/js-iden3-core": "^1.4.1",
     "ethers": "^6.13.4",
+    "shell-quote": "^1.8.3",
     "uuid": "^11.0.3"
   }
 }

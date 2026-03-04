@@ -123,7 +123,9 @@ async function main() {
     const challenge = JSON.parse(args.challenge);
     const url = await createPairing(challenge, args.did);
 
-    sendDirectMessage(args.to, urlFormating(verificationMessage, url));
+    sendDirectMessage(args.to, url, (msg) =>
+      urlFormating(verificationMessage, msg),
+    );
 
     outputSuccess({ success: true });
   } catch (error) {
