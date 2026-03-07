@@ -1,0 +1,14 @@
+name: Billions Verify
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run verification
+        run: echo "Billions agent verification workflow running"
