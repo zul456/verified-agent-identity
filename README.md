@@ -90,17 +90,58 @@ Also major libs that influence the identity management part have fixed well test
 
 All cryptographic material is persisted to `$HOME/.openclaw/billions/` — a directory that lives **outside the agent's workspace**:
 
-| File               | Contents                                        |
-| ------------------ | ----------------------------------------------- |
-| `kms.json`         | Private keys (unencrypted, owner-readable only) |
-| `identities.json`  | Identity metadata                               |
-| `defaultDid.json`  | Active DID and associated public key            |
-| `challenges.json`  | Per-DID challenge history                       |
-| `credentials.json` | Verifiable credentials                          |
+| File               | Contents                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `kms.json`         | Private keys — plain text by default, AES-256-GCM encrypted when master key is set |
+| `identities.json`  | Identity metadata                                                                  |
+| `defaultDid.json`  | Active DID and associated public key                                               |
+| `challenges.json`  | Per-DID challenge history                                                          |
+| `credentials.json` | Verifiable credentials                                                             |
 
-If you cannot accept plaintext private keys on the host consider usage of encrypted KMS. In the future updates native integration with one of the encrypted key providers will be announced.
+Private keys are stored in plain text by default. To protect them at rest, enable master key encryption as described in the **KMS Encryption** section below.
 
-Recommended mitigations: review the code of this or other skills that can access plain files. Run the skill in an isolated VM or container, back up generated private keys and consider removing from the storage until the next mandatory usage will be needed.
+### KMS Encryption
+
+Set the environment variable `BILLIONS_NETWORK_MASTER_KMS_KEY` to enable AES-256-GCM at-rest encryption for `kms.json`. When the variable is set, every write to the key store is encrypted; when it is absent the store keeps all in plain JSON (backward-compatible with all existing files).
+
+**Behaviour summary**
+
+| `BILLIONS_NETWORK_MASTER_KMS_KEY` | `kms.json` on disk              |
+| --------------------------------- | ------------------------------- |
+| Not set                           | Plain JSON (legacy format kept) |
+| Set                               | AES-256-GCM encrypted envelope  |
+
+> **Backward compatibility** — existing plain-text `kms.json` files are read without a master key. On the first write after the variable is set the file is automatically re-encrypted. No manual migration step is required.
+
+**How to set the variable**
+
+_Option 1 — openclaw skill config (recommended for agent deployments):_
+
+Add an `env` block for the skill inside your openclaw config:
+
+```json
+"skills": {
+  "entries": {
+    "verified-agent-identity": {
+      "env": {
+        "BILLIONS_NETWORK_MASTER_KMS_KEY": "<your-strong-secret>"
+      }
+    }
+  }
+}
+```
+
+_Option 2 — shell or process environment:_
+
+```bash
+export BILLIONS_NETWORK_MASTER_KMS_KEY="<your-strong-secret>"
+node scripts/createNewEthereumIdentity.js
+node scripts/manualLinkHumanToAgent.js --challenge '{"name": "Agent Name", "description": "Short description of the agent"}'
+```
+
+For all other ways to pass environment variables to a skill see the [OpenClaw environment documentation](https://docs.openclaw.ai/help/environment).
+
+**CRITICAL**: Save master keys securely and do not share them. If the master key is lost, all encrypted keys will be lost.
 
 ### Subprocess Execution Safety
 
@@ -116,7 +157,7 @@ Prompt injection and arbitrary code execution are structurally impossible: the e
 
 ### Network and External Binary Policy
 
-- All external https calls will be made to trusted resources. Signed JWS attestation (proof of agent ownership) is encoded securely by utilizing robust security practices and sent within user context directly to agent owner. It requires an explicit user consent to pass it to any external source. It is not sent automatically anywhere without user participation. 
+- All external https calls will be made to trusted resources. Signed JWS attestation (proof of agent ownership) is encoded securely by utilizing robust security practices and sent within user context directly to agent owner. It requires an explicit user consent to pass it to any external source. It is not sent automatically anywhere without user participation.
   All network calls are directed to legitimate DID resolvers (resolver.privado.id) or the project's own infrastructure (billions.network).
   These network calls can not exfiltrate signed attestations or identity data to third-party services by skill design as they do not pass them. This is possible only through explicit action from the user side with consent. Also attestation contains only publicly verifiable information.
 - No external binary other than `openclaw` is invoked.
